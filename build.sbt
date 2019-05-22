@@ -8,9 +8,6 @@ val workaround = {
   ()
 }
 
-val avroSettings = Seq(javaSource in AvroConfig := (sourceManaged in Compile).value,
-  AvroConfig / stringType := "String")
-
 val resolutionRepos = Seq(
   "mvnrepo" at "https://mvnrepository.com"
   ,"confluent" at "https://packages.confluent.io/maven/"
@@ -33,9 +30,7 @@ lazy val root = (project in file(".") withId "objectreader")
         "-encoding", "UTF-8",
         "-feature",
         "-explaintypes",
-        "-language:existentials",
-        "-Xfatal-warnings",
-        "-Ypartial-unification"
+        "-Xfatal-warnings"
       ),
       scmInfo := Some(
         ScmInfo(
@@ -49,7 +44,7 @@ lazy val root = (project in file(".") withId "objectreader")
     publish := {},
     publishLocal := {}
   )
-  .aggregate(configReader, jsonReader, objectReaderk)
+  .aggregate(configReader, jsonReader, objectReader)
 
 lazy val jsonReader = (project in file("json-reader"))
   .dependsOn(objectReader)
