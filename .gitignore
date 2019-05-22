@@ -1,0 +1,21 @@
+*.class
+*.log
+
+# sbt specific
+.cache
+.history
+.lib/
+target/
+
+# Scala-IDE specific
+.scala_dependencies
+.worksheet
+.idea
+
+templates/
+
+.ensime*
+.projectile
+
+.DS_Store
+
