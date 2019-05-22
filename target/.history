@@ -1,6 +1,0 @@
-show scalaVersion
-show scalaVersion.value
-show scalaVersion
-show dependencies
-inspect dependencies
-show allDependencies
