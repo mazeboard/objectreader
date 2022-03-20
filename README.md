@@ -5,6 +5,8 @@ create class instance from object
 this module is used to implement config-reader and json-reader, and we are planning to
 implement other readers (ie. Kafka-reader, serializer/deserializer, ...)
 
+We probably should add getArray, getSet, and maybe other methods
+
 ##### object-reader interface
 
 This work is experimental and it is work in progress.
