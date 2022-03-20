@@ -7,8 +7,6 @@ implement other readers (ie. Kafka-reader, serializer/deserializer, ...)
 
 We probably should add getArray, getSet, and maybe other methods
 
-##### object-reader interface
-
 This work is experimental and it is work in progress.
 
 Users of object-reader must implement at least `getValue`;
@@ -20,6 +18,8 @@ The error handling should be improved (any suggestions are welcome)
 
 In the interface there is two unfortunate functions: newInstance and getReaderTypeTag; we do
 not know how to get the type tag of the reader object and to create a new instance.
+
+##### object-reader interface
 
 ```
   class Missing(e: Throwable) extends Throwable(e)
