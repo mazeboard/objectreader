@@ -1,31 +1,26 @@
-import scalariform.formatter.preferences._
-import Dependencies._
 import sbt.Keys.libraryDependencies
 
-// SEE: https://github.com/sbt/sbt/issues/3618
-val workaround = {
-  sys.props += "packaging.type" -> "jar"
-  ()
-}
+ThisBuild / organization := "com.ankbot"
+ThisBuild / version      := "0.1.0-SNAPSHOT"
+ThisBuild / scalaVersion := "2.13.8"
+ThisBuild / publishTo := Some(MavenCache("local-maven",
+  Path.userHome.asFile.toURI.toURL + ".m2/repository",
+  file("/")))
 
-val resolutionRepos = Seq(
+/*val resolutionRepos = Seq(
   "mvnrepo" at "https://mvnrepository.com"
   ,"confluent" at "https://packages.confluent.io/maven/"
   ,"jcenter" at "https://jcenter.bintray.com/"
   ,"Artima Maven Repository" at "http://repo.artima.com/releases"
   ,Resolver.bintrayRepo("ovotech", "maven")
-)
+)*/
 
 lazy val root = (project in file(".") withId "objectreader")
   .settings(
     name := "objectreader",
     inThisBuild(Seq(
-      organization := "com.mazeboard",
-      version := "0.1.0-SNAPSHOT",
-      scalaVersion := "2.12.7",
-      resolvers ++= resolutionRepos,
       IntegrationTest / parallelExecution  := false,
-      scalacOptions ++= Seq(
+      /*scalacOptions ++= Seq(
         "-deprecation",
         "-encoding", "UTF-8",
         "-feature",
@@ -37,35 +32,15 @@ lazy val root = (project in file(".") withId "objectreader")
           url("https://github.com/mazeboard/objectreader"),
           "https://github.com/mazeboard/objectreader.git"
         )
-      ),
-      publishMavenStyle := true,
+      ),*/
+      libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value,
+      libraryDependencies += "org.json" % "json" % "20211205",
+      libraryDependencies += "com.typesafe" % "config" % "1.4.2",
+      libraryDependencies += "org.apache.spark" %% "spark-core" % "3.2.1" % Test withSources() withJavadoc(),
+      //libraryDependencies += "org.scalactic" %% "scalactic" % "3.2.11",
+      libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.11" % "test"
     )),
-    publishArtifact := false,
+    /*publishArtifact := false,
     publish := {},
-    publishLocal := {}
-  )
-  .aggregate(configReader, jsonReader, objectReader)
-
-lazy val jsonReader = (project in file("json-reader"))
-  .dependsOn(objectReader)
-  .settings(
-    name := "json-reader", 
-    libraryDependencies += "org.json" % "json" % "20180813",
-    libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % Test
-  )
-
-lazy val configReader = (project in file("config-reader"))
-  .dependsOn(objectReader)
-  .settings(
-    name := "config-reader",
-    libraryDependencies += "com.typesafe" % "config" % "1.3.3",
-    libraryDependencies += "org.apache.spark" %% "spark-core" % "2.4.0" % Test withSources() withJavadoc(),
-    libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % Test
-  )
-
-lazy val objectReader = (project in file("object-reader"))
-  .settings(
-    name := "object-reader",
-    libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value,
-    libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % Test
+    publishLocal := {}*/
   )

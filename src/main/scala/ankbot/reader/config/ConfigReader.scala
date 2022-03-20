@@ -1,12 +1,11 @@
-package com.mazeboard.config
+package ankbot.reader.config
 
 import java.util.concurrent.TimeUnit._
-
-import com.mazeboard.config.ConfigReader._
-import com.mazeboard.reader.ObjectReader
+import ConfigReader._
+import ankbot.reader.ObjectReader
 import com.typesafe.config.{ ConfigException, _ }
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.reflect.runtime.universe._
 
 /**

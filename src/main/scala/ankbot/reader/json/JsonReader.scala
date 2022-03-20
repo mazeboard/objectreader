@@ -1,9 +1,9 @@
-package com.mazeboard.json
+package ankbot.reader.json
 
-import com.mazeboard.reader.ObjectReader
+import ankbot.reader.ObjectReader
 import org.json.{ JSONArray, JSONObject, JSONTokener }
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.reflect.runtime.universe._
 
 /**

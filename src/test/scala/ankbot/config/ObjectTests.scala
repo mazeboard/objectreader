@@ -1,9 +1,9 @@
-package com.mazeboard.config
+package ankbot.config
 
-import com.mazeboard.config.ConfigReader._
-import com.typesafe.config._
+import ankbot.reader.config.ConfigReader
+import ankbot.reader.config.ConfigReader.{ Bytes, DurationMilliSeconds }
+import com.typesafe.config.Config
 import org.apache.spark.SparkConf
-
 import scala.reflect.runtime.universe._
 
 object ObjectTests {
@@ -218,6 +218,7 @@ object ObjectTests {
 
   class UClass[T](val data: T) {
     override def toString(): String = s"UClass(${data.toString})"
+
     override def equals(obj: Any): Boolean = {
       obj match {
         case x: UClass[T] => this.data == x.data
@@ -236,6 +237,7 @@ object ObjectTests {
 
   class DClass(val x: Map[String, Int] = Map()) {
     override def toString(): String = s"DClass($x)"
+
     override def equals(obj: Any): Boolean = {
       obj match {
         case x: DClass => this.x == x.x

@@ -1,9 +1,11 @@
-package com.mazeboard.reader
+package ankbot.reader
 
+import java.math.BigInteger
+import scala.collection.mutable
 import scala.language.dynamics
 import scala.reflect.api
 import scala.reflect.runtime.universe._
-import scala.reflect.runtime.currentMirror
+import scala.reflect.runtime.{ currentMirror, universe }
 
 /**
  *
@@ -28,13 +30,16 @@ abstract class ObjectReader[X](root: X) extends Dynamic {
     throw new UnsupportedOperationException("getReaderTypeTag is not defined")
   }
 
-  def reader[T](obj: X)(implicit ttag: TypeTag[T]): T = throw new ReaderNotFound
+  def reader[T](obj: X)(implicit ttag: TypeTag[T]): T =
+    throw new ReaderNotFound
 
   def unwrap(obj: X): AnyRef = obj.asInstanceOf[AnyRef]
 
-  def getList(obj: X): List[X] = throw new UnsupportedOperationException("getList is not defined")
+  def getList(obj: X): List[X] =
+    throw new UnsupportedOperationException("getList is not defined")
 
-  def getMap[T](obj: X)(implicit ttag: TypeTag[T]): Map[_, X] = throw new UnsupportedOperationException("getMap is not defined")
+  def getMap[T](obj: X)(implicit ttag: TypeTag[T]): Map[_, X] =
+    throw new UnsupportedOperationException("getMap is not defined")
 
   def getValue(name: String, obj: X): X
 
@@ -71,29 +76,29 @@ abstract class ObjectReader[X](root: X) extends Dynamic {
       case _: ReaderNotFound =>
         typeOf[T] match {
           case t if t =:= getReaderTypeTag.tpe => newInstance(obj)
-          case t if t <:< typeOf[List[_]] => {
+          case t if t <:< typeOf[List[_]] =>
             val tpe = t.typeArgs.head
             getList(obj).map(xobj => {
               dispatch()(getTypeTag(tpe), xobj)
             })
-          }
-          case t if t <:< typeOf[Map[_, _]] => {
-            val tpeKey = t.typeArgs.head
-            implicit val ttag: TypeTag[_] = getTypeTag(t.typeArgs.drop(1).head)
-            val m = getMap(obj)
-            m.map {
-              case (k, v) =>
-                implicit val obj: X = v
-                tpeKey match {
-                  case t if t =:= typeOf[String] || t.erasure <:< typeOf[AnyVal] =>
-                    (k, dispatch())
-                  case _ =>
-                    (
-                      createInstance(tpeKey, (method: MethodSymbol) => k.asInstanceOf[AnyRef]),
-                      dispatch())
-                }
+          case t if t <:< typeOf[Map[_, _]] =>
+            val tpeKey: universe.Type = t.typeArgs.head
+            val tpeValue: TypeTag[_] = getTypeTag(t.typeArgs.drop(1).head)
+            def insertTag[K](tt: K) = {
+              val m = getMap(obj)
+              m.asInstanceOf[Map[K, X]].map {
+                case (k, v) =>
+                  tpeKey match {
+                    case t if t =:= typeOf[String] || t.erasure <:< typeOf[AnyVal] =>
+                      (k, dispatch()(tpeValue, v))
+                    case _ =>
+                      (
+                        createInstance(tpeKey, (method: MethodSymbol) => k.asInstanceOf[AnyRef]),
+                        dispatch()(tpeValue, v))
+                  }
+              }
             }
-          }
+            insertTag(tpeKey)
           case t if t.typeSymbol == typeOf[Option[_]].typeSymbol =>
             Some(dispatch()(getTypeTag(t.typeArgs.head), obj))
           case t if t =:= typeOf[Int] => unwrap(obj).toString.toInt
@@ -103,7 +108,26 @@ abstract class ObjectReader[X](root: X) extends Dynamic {
           case t if t =:= typeOf[Number] => unwrap(obj).toString.toInt // TODO what Number ?
           case t if t =:= typeOf[Boolean] => unwrap(obj).toString.toBoolean
           case t if t =:= typeOf[String] => unwrap(obj).toString
-          case _ => load[T]
+          case t if t =:= typeOf[BigDecimal] =>
+            BigDecimal(unwrap(obj).toString)
+          case t if t =:= typeOf[BigInt] =>
+            BigInt(unwrap(obj).toString)
+          case t if t =:= typeOf[java.math.BigDecimal] =>
+            // added because load function fails to create an instance of BigDecimal
+            new java.math.BigDecimal(unwrap(obj).toString)
+          case t if t =:= typeOf[java.math.BigInteger] =>
+            // added because load function fails to create an instance of BigInteger
+            new java.math.BigInteger(unwrap(obj).toString)
+          case t if t =:= typeOf[java.util.UUID] =>
+            java.util.UUID.fromString(unwrap(obj).toString)
+          // TODO add other types A, those without constructor <new A(str)>
+          //   or modify load function to find methods, f:String=>A,
+          //   that returns an instance of A
+          //   examples: BigDecimal, BigInt, UUID, ...
+          //   java.util.BigInteger and java.util.BigDecimal have constructor
+          //   ie. new java.math.BigInteger("123"), why load functions fails
+          case _ =>
+            load[T]
         }
       case e: Throwable =>
         throw e
@@ -119,12 +143,16 @@ abstract class ObjectReader[X](root: X) extends Dynamic {
   private def load[A](implicit ttag: TypeTag[A], obj: X): A = {
     val tpe = ttag.tpe
     (getConstructors(tpe)
-      .sortWith((m1, m2) =>
-        m1.isPrimaryConstructor
-          || (!m2.isPrimaryConstructor &&
-            (m1.isConstructor
-              || (m1.paramLists.head.length > m2.paramLists.head.length))))
-      .map(m => (m, null.asInstanceOf[List[(AnyRef, Boolean)]]))
+      .sortWith((m1, m2) => {
+        val x = m1.paramLists
+        m1.isPrimaryConstructor ||
+          (!m2.isPrimaryConstructor &&
+            (m1.isConstructor ||
+              (m1.paramLists.head.length >
+                m2.paramLists.head.length)))
+      })
+      .map(m =>
+        (m, null.asInstanceOf[List[(AnyRef, Boolean)]]))
       .fold(null)((a, b) => {
         if (a != null)
           a
@@ -153,7 +181,8 @@ abstract class ObjectReader[X](root: X) extends Dynamic {
                 }
               })
           }) match {
-            case (m, list) if list.forall(_._1 != null) && !list.forall(_._2) => (m, list)
+            case (m, list) if list.forall(_._1 != null) &&
+              !list.forall(_._2) => (m, list)
             case _ => a
           }
         }
@@ -161,7 +190,9 @@ abstract class ObjectReader[X](root: X) extends Dynamic {
         case e if e == null =>
           // create an instance with obj as parameter (if tpe has a constructor or an apply method that accepts one parameter)
           createInstance(tpe, (method: MethodSymbol) => {
-            implicit val ttag: TypeTag[_] = getTypeTag(method.paramLists.head.head.typeSignature.asSeenFrom(tpe, tpe.typeSymbol))
+            implicit val ttag: TypeTag[_] =
+              getTypeTag(method.paramLists.head.head.typeSignature
+                .asSeenFrom(tpe, tpe.typeSymbol))
             dispatch().asInstanceOf[AnyRef]
           })
         case (method, args) =>
