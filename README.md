@@ -58,6 +58,43 @@ Compared to PureConfig, config-reader has less boilerplate with a simple impleme
 ##### examples
 
 ```
+  abstract class Animal(val name: String) {
+    override def equals(obj: Any): Boolean = {
+      obj match {
+        case x: Animal => x.name == this.name
+        case _ => false
+      }
+    }
+  }
+
+  object Animal {
+    def apply(name: String): Animal = {
+      name match {
+        case _ if List("Hummingbird", "Parrot", "Heron").contains(name) => new Bird(name)
+        case _ if List("Pygmy", "Vervet", "Squirrel").contains(name) => new Monkey(name)
+        case _ => new UnknownAnimal(name)
+      }
+    }
+  }
+
+  class Bird(name: String) extends Animal(name)
+
+  class Monkey(name: String) extends Animal(name)
+
+  class UnknownAnimal(name: String) extends Animal(name)
+
+    assert(configFromString(
+      """{"Toto": "Anything",
+        |"Hummingbird": {"food": "worms"},
+        |"Parrot": "Broccoli",
+        |"Squirrel": "banana"}""".stripMargin)[Map[Animal, Food]] ==
+      Map(
+        new UnknownAnimal("Toto") -> Food("Anything"),
+        new Bird("Hummingbird") -> Food("worms"),
+        new Bird("Parrot") -> Food("Broccoli"),
+        new Monkey("Squirrel") -> Food("banana")))
+
+
 val config = new ConfigReader(ConfigFactory.parseString("{foo:{a:1}}"))
 val myObj = config.foo[MyObj]
 assert(myObj == MyObj(a = 1, b = 0))
