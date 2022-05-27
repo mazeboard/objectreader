@@ -1,4 +1,4 @@
-package ankbot.config;
+package ankbot;
 
 public enum Level {
     HIGH,

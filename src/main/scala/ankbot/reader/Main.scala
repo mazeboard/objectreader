@@ -1,7 +1,5 @@
 package ankbot.reader
 
-import ankbot.reader.config.ConfigReader
-import ankbot.reader.json.JsonReader
 import com.typesafe.config.ConfigFactory
 
 object Main extends App {

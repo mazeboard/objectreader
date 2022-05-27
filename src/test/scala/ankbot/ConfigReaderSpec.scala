@@ -1,12 +1,13 @@
-package ankbot.config
+package ankbot
 
-import ankbot.reader.config.ConfigReader
-import ankbot.reader.config.ConfigReader._
-import ankbot.config.ObjectTests._
+import ObjectTests._
+import ankbot.reader.ConfigReader
+import ankbot.reader.ConfigReader._
 import com.typesafe.config._
 import org.apache.spark.SparkConf
-import org.scalatest.matchers.should.Matchers
 import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
+
 import scala.util.Try
 
 class ConfigReaderSpec
@@ -201,6 +202,13 @@ class ConfigReaderSpec
         new Bird("Parrot") -> Food("Broccoli"),
         new Monkey("Squirrel") -> Food("banana")))
   }
+  it should "pass Bird" in {
+    assert(configFromString("""{"Parrot": "Broccoli","Squirrel": "banana"}""".stripMargin)[UClass[Map[Animal, Food]]] ==
+      new UClass(Map(
+        new Bird("Parrot") -> Food("Broccoli"),
+        new Monkey("Squirrel") -> Food("banana")
+      )))
+  }
   it should "pass spark 1" in {
     val set1 = configFromString(
       """{"spark.master": "local[*]", "spark.app.name": "test sparkconf"}""")[MySparkConf]
@@ -224,17 +232,11 @@ class ConfigReaderSpec
     assert(configFromString("{a:1,b:2}")[UClass[Map[String, Int]]] ==
       new UClass(Map("a" -> 1, "b" -> 2)))
   }
-  it should "pass Bird" in {
-    assert(configFromString("""{"Parrot": "Broccoli","Squirrel": "banana"}""".stripMargin)[UClass[Map[Animal, Food]]] ==
-      new UClass(Map(
-        new Bird("Parrot") -> Food("Broccoli"),
-        new Monkey("Squirrel") -> Food("banana"))))
-  }
   it should "pass map DClass" in {
     assert(configFromString("{z:20, y:30}")[DClass] ==
       new DClass(Map("y" -> 30, "z" -> 20)))
   }
-  def configFromString(s: String) = {
+  def configFromString(s: String): ConfigReader = {
     new ConfigReader(ConfigFactory.parseString(s).resolve())
   }
 }

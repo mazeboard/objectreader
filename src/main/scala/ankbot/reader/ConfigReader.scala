@@ -1,10 +1,9 @@
-package ankbot.reader.config
+package ankbot.reader
+
+import ankbot.reader.ConfigReader._
+import com.typesafe.config.{Config, ConfigException, ConfigFactory }
 
 import java.util.concurrent.TimeUnit._
-import ConfigReader._
-import ankbot.reader.ObjectReader
-import com.typesafe.config.{ ConfigException, _ }
-
 import scala.jdk.CollectionConverters._
 import scala.reflect.runtime.universe._
 
@@ -18,7 +17,7 @@ class ConfigReader(config: Config) extends ObjectReader[Config](config.atKey(ID)
     new ConfigReader(obj.getConfig(ID)).asInstanceOf[T with ObjectReader[Config]]
   }
 
-  override def getReaderTypeTag(): TypeTag[ConfigReader] = typeTag[ConfigReader]
+  override def getReaderTypeTag: TypeTag[_] = typeTag[ConfigReader]
 
   override def unwrap(obj: Config): AnyRef = obj.getAnyRef(ID)
 

@@ -84,7 +84,7 @@ abstract class ObjectReader[X](root: X) extends Dynamic {
           case t if t <:< typeOf[Map[_, _]] =>
             val tpeKey: universe.Type = t.typeArgs.head
             val tpeValue: TypeTag[_] = getTypeTag(t.typeArgs.drop(1).head)
-            def insertTag[K](tt: K) = {
+            def insertTag[K](tt: K): Map[Any, Any] = {
               val m = getMap(obj)
               m.asInstanceOf[Map[K, X]].map {
                 case (k, v) =>

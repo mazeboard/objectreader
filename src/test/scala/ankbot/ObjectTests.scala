@@ -1,15 +1,16 @@
-package ankbot.config
+package ankbot
 
-import ankbot.reader.config.ConfigReader
-import ankbot.reader.config.ConfigReader.{ Bytes, DurationMilliSeconds }
+import ankbot.reader.ConfigReader
+import ankbot.reader.ConfigReader.{Bytes, DurationMilliSeconds}
 import com.typesafe.config.Config
 import org.apache.spark.SparkConf
+
 import scala.reflect.runtime.universe._
 
 object ObjectTests {
   class MyConfigReader(config: Config) extends ConfigReader(config) {
-    override def reader[T: TypeTag](obj: Config): T = {
-      (typeOf[T] match {
+    override def reader[T](obj: Config)(implicit ttag: TypeTag[T]): T = {
+      (weakTypeTag[T].tpe match {
         case t if t =:= typeOf[SparkConf] => {
           val m = getMap[String](obj).mapValues(x => unwrap(x).toString)
           new SparkConf().setAll(m)
@@ -202,7 +203,7 @@ object ObjectTests {
       }
     }
 
-    override def toString(): String = s"ZClass($port)"
+    override def toString: String = s"ZClass($port)"
   }
 
   class WClass(val ports: List[Port]) {
@@ -213,11 +214,11 @@ object ObjectTests {
       }
     }
 
-    override def toString(): String = s"WClass($ports)"
+    override def toString: String = s"WClass($ports)"
   }
 
   class UClass[T](val data: T) {
-    override def toString(): String = s"UClass(${data.toString})"
+    override def toString: String = s"UClass(${data.toString})"
 
     override def equals(obj: Any): Boolean = {
       obj match {

@@ -1,6 +1,6 @@
-package ankbot.json
+package ankbot
 
-import ankbot.reader.json.JsonReader
+import ankbot.reader.JsonReader
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
@@ -46,6 +46,10 @@ class JsonReaderSpec
   it should "pass Goo reader3" in {
     assert(jsonReader3[Goo] == Goo(a = List(Map("a" -> 1.0, "b" -> 2.0))))
   }
+  it should "pass ZFoo" in {
+    val r = new JsonReader("""{a:12,bar:{b:bar}}""")[ZFoo]
+    println(r)
+  }
 }
 
 case class Foo(a: Int, b: List[Int], c: String, d: Double = 0.0)
@@ -54,3 +58,5 @@ case class Dar(a: Int, b: List[Int], c: String, d: Double = 0.0,
   e: Map[String, Int],
   f: List[Map[String, Int]])
 case class Goo(a: List[Map[String, Double]])
+case class ZBar(b:String) {}
+case class ZFoo(a:Int, bar:ZBar) {}

@@ -1,6 +1,5 @@
-package ankbot.reader.json
+package ankbot.reader
 
-import ankbot.reader.ObjectReader
 import org.json.{ JSONArray, JSONObject, JSONTokener }
 
 import scala.jdk.CollectionConverters._
@@ -12,13 +11,13 @@ import scala.reflect.runtime.universe._
  */
 class JsonReader(jsonString: String) extends JsonObjectReader(new JSONTokener(jsonString).nextValue())
 
-private[json] class JsonObjectReader(json: AnyRef) extends ObjectReader[AnyRef](json) {
+class JsonObjectReader(json: AnyRef) extends ObjectReader[AnyRef](json) {
 
   override def newInstance[T](obj: AnyRef): T with ObjectReader[AnyRef] = {
     new JsonObjectReader(obj).asInstanceOf[T with ObjectReader[AnyRef]]
   }
 
-  override def getReaderTypeTag(): TypeTag[JsonObjectReader] = typeTag[JsonObjectReader]
+  override def getReaderTypeTag: TypeTag[_] = typeTag[JsonObjectReader]
 
   override def unwrap(obj: AnyRef): AnyRef = obj
 
