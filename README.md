@@ -3,9 +3,7 @@
 create class instance from object
 
 this module is used to implement config-reader and json-reader, and we are planning to
-implement other readers (ie. Kafka-reader)
-
-##### object-reader interface
+implement other readers (ie. Kafka-reader, serializer/deserializer, ...)
 
 This work is experimental and it is work in progress.
 
@@ -18,6 +16,10 @@ The error handling should be improved (any suggestions are welcome)
 
 In the interface there is two unfortunate functions: newInstance and getReaderTypeTag; we do
 not know how to get the type tag of the reader object and to create a new instance.
+
+We probably should add getArray, getSet, and maybe other methods
+
+##### object-reader interface
 
 ```
   class Missing(e: Throwable) extends Throwable(e)
@@ -56,6 +58,43 @@ Compared to PureConfig, config-reader has less boilerplate with a simple impleme
 ##### examples
 
 ```
+  abstract class Animal(val name: String) {
+    override def equals(obj: Any): Boolean = {
+      obj match {
+        case x: Animal => x.name == this.name
+        case _ => false
+      }
+    }
+  }
+
+  object Animal {
+    def apply(name: String): Animal = {
+      name match {
+        case _ if List("Hummingbird", "Parrot", "Heron").contains(name) => new Bird(name)
+        case _ if List("Pygmy", "Vervet", "Squirrel").contains(name) => new Monkey(name)
+        case _ => new UnknownAnimal(name)
+      }
+    }
+  }
+
+  class Bird(name: String) extends Animal(name)
+
+  class Monkey(name: String) extends Animal(name)
+
+  class UnknownAnimal(name: String) extends Animal(name)
+
+    assert(configFromString(
+      """{"Toto": "Anything",
+        |"Hummingbird": {"food": "worms"},
+        |"Parrot": "Broccoli",
+        |"Squirrel": "banana"}""".stripMargin)[Map[Animal, Food]] ==
+      Map(
+        new UnknownAnimal("Toto") -> Food("Anything"),
+        new Bird("Hummingbird") -> Food("worms"),
+        new Bird("Parrot") -> Food("Broccoli"),
+        new Monkey("Squirrel") -> Food("banana")))
+
+
 val config = new ConfigReader(ConfigFactory.parseString("{foo:{a:1}}"))
 val myObj = config.foo[MyObj]
 assert(myObj == MyObj(a = 1, b = 0))
